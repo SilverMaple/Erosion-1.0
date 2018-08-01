@@ -1,0 +1,92 @@
+#encoding=utf-8
+from direct.stdpy import threading
+from direct.stdpy.threading import currentThread
+from pandac.PandaModules import *
+from panda3d.ai import *
+from direct.gui.OnscreenText import OnscreenText
+from direct.gui.OnscreenImage import OnscreenImage
+import sys, os, math
+from math import pi, sin, cos, atan, acos
+from direct.actor.Actor import Actor
+
+
+class Mission(object):
+
+    def __init__(self, p, m):
+        self.menu = m
+        self.player = p
+
+    def interactiveWith(self, goods):
+        props = WindowProperties()
+        props.setCursorHidden(False)
+        base.win.requestProperties(props)
+        self.player.endTask()
+        self.goods = goods
+        if goods.Name == "box":
+            self.menu.selectDialog.show()
+            self.menu.selectDialog['text'] = "我的老天，这是个箱子"
+            self.menu.aButton['command'] = self.aCommand
+            self.menu.aButton['text'] = "move it."
+            self.menu.bButton['command'] = self.bCommand
+            self.menu.bButton['text'] = "leave."
+        elif goods.Name == "yaoshui":
+            self.menu.selectDialog.show()
+            self.menu.selectDialog['text'] = "God! \nIt's a blue bottle!"
+            self.menu.aButton['command'] = self.aCommand
+            self.menu.aButton['text'] = "shine it."
+            self.menu.bButton['command'] = self.bCommand
+            self.menu.bButton['text'] = "drink it."
+        elif goods.Name == "toilet_door":
+            self.menu.selectDialog.show()
+            self.menu.selectDialog['text'] = "God! \nIt's a toilet door!"
+            self.menu.aButton['command'] = self.openDoor
+            self.menu.aButton['text'] = "open it."
+            self.menu.bButton['command'] = self.bCommand
+            self.menu.bButton['text'] = "leave it."
+        elif goods.Name == "matong":
+            self.menu.infoDialog.show()
+            self.menu.infoDialog['text'] = "get something!"
+            self.resume()
+
+    def openDoor(self):
+        self.goods.OnClick()
+        self.resume()
+        self.player.initTask()
+
+    def aCommand(self):
+        self.resume()
+        self.player.initTask()
+
+    def bCommand(self):
+        self.menu.infoDialog.show()
+        self.menu.infoDialog['text'] = "get something!"
+        self.resume()
+        self.player.initTask()
+
+    def skip(self):
+        taskMgr.add(self.fadeTask, "fadeTask")
+
+    def fadeTask(self, task):
+        if task.time < 1.0:
+            return task.cont
+        self.menu.infoDialog.hide()
+        return task.done
+
+    def resume(self):
+        self.menu.selectDialog.hide()
+        self.skip()
+        props = WindowProperties()
+        props.setCursorHidden(True)
+        base.win.requestProperties(props)
+        base.win.movePointer(0, base.win.getXSize() / 2, base.win.getYSize() / 2)
+
+    def endA(self):
+        props = WindowProperties()
+        props.setCursorHidden(False)
+        base.win.requestProperties(props)
+        self.player.endTask()
+        self.menu.mainFrame.show()
+        self.menu.infoDialog.show()
+        self.player.erosionFrame.hide()
+        self.menu.infoDialog['text'] = "Erosion max!"
+        self.skip()
